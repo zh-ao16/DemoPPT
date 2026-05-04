@@ -9,6 +9,9 @@ import Convert from "./views/Convert.vue";
 import Login from "./views/Login.vue";
 import User from "./views/User.vue";
 import Settings from "./views/Settings.vue";
+import Cover from "./views/Cover.vue";
+import Presenter from "./views/Presenter.vue";
+import TemplateHub from "./views/TemplateHub.vue";
 import 'ant-design-vue/dist/reset.css';
 
 const routes = [
@@ -18,7 +21,10 @@ const routes = [
   { path: "/settings", component: Settings },
   { path: "/create", component: Create },
   { path: "/history", component: History },
-  { path: "/convert", component: Convert }
+  { path: "/convert", component: Convert },
+  { path: "/presenter/:filename", component: Presenter },
+  { path: "/cover", component: Cover },
+  { path: "/template-hub", component: TemplateHub },
 ];
 
 const router = createRouter({

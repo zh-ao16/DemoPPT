@@ -61,6 +61,17 @@ def init_db():
         )
     """)
     
+    # 短信验证码表
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS sms_codes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            phone VARCHAR(20) NOT NULL,
+            code VARCHAR(10) NOT NULL,
+            expire_time DATETIME NOT NULL,
+            create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
     conn.commit()
     conn.close()
 
@@ -285,10 +296,11 @@ def change_password(user_id: int, old_password: str, new_password: str) -> dict:
     return {"success": True, "message": "密码修改成功"}
 
 
-def send_sms_code(phone: str, code: str) -> dict:
-    """发送短信验证码（模拟版 - 实际需对接短信网关）"""
-    # 实际项目中这里要对接创蓝/阿里云/腾讯云短信
-    # 当前实现将验证码存入Redis或数据库用于验证
+def send_sms_code(phone: str, code: str = "") -> dict:
+    """发送短信验证码（开发模式：固定123456）"""
+    import secrets
+    # 开发模式：固定验证码，生产环境替换为真实短信API
+    code = "123456"  # 开发测试用
     conn = get_db()
     cursor = conn.cursor()
     
@@ -301,9 +313,8 @@ def send_sms_code(phone: str, code: str) -> dict:
     conn.commit()
     conn.close()
     
-    # 模拟发送成功（实际项目要真实调用短信API）
     print(f"[SMS] 向 {phone} 发送验证码: {code}")
-    return {"success": True, "message": "验证码已发送"}  # [SEC-FIX] 删除code字段防止泄露
+    return {"success": True, "message": "验证码已发送"}
 
 
 def verify_sms_code(phone: str, code: str) -> bool:

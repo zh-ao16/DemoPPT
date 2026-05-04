@@ -48,13 +48,34 @@
           class="login-form"
           @finish="handleRegister">
           <a-form-item label="手机号" name="phone">
+            <a-input-group compact style="display: flex">
+              <a-input 
+                v-model:value="phone" 
+                placeholder="请输入手机号" 
+                size="large"
+                :maxlength="11"
+                style="flex: 1">
+                <template #prefix>
+                  <span class="input-icon">📱</span>
+                </template>
+              </a-input>
+              <a-button 
+                size="large" 
+                :disabled="countdown > 0 || !phone || phone.length !== 11"
+                @click="sendSmsCode"
+                class="send-btn">
+                {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
+              </a-button>
+            </a-input-group>
+          </a-form-item>
+          <a-form-item label="验证码" name="smsCode">
             <a-input 
-              v-model:value="phone" 
-              placeholder="请输入手机号" 
+              v-model:value="smsCode" 
+              placeholder="请输入验证码" 
               size="large"
-              :maxlength="11">
+              :maxlength="6">
               <template #prefix>
-                <span class="input-icon">📱</span>
+                <span class="input-icon">🔐</span>
               </template>
             </a-input>
           </a-form-item>
@@ -72,8 +93,14 @@
               :maxlength="20" />
           </a-form-item>
           <a-alert v-if="error" type="error" :message="error" show-icon class="error-alert" />
-          <a-button type="primary" html-type="submit" size="large" block :loading="loading">
-            {{ loading ? '注册中...' : '注册' }}
+          <a-button 
+            type="primary" 
+            html-type="submit" 
+            size="large" 
+            block 
+            :loading="loading"
+            :disabled="countdown > 0 || !phone || phone.length !== 11">
+            {{ loading ? '注册中...' : (countdown > 0 ? `${countdown}秒后可重新发送` : '注册') }}
           </a-button>
         </a-form>
         
@@ -97,6 +124,9 @@ const tab = ref('login')
 const phone = ref('')
 const password = ref('')
 const nickname = ref('')
+const smsCode = ref('')
+const countdown = ref(0)
+let countdownTimer = null
 const error = ref('')
 const loading = ref(false)
 
@@ -137,17 +167,53 @@ async function handleLogin() {
   }
 }
 
+async function sendSmsCode() {
+  if (!phone.value || phone.value.length !== 11) {
+    error.value = '请输入11位手机号'
+    return
+  }
+  error.value = ''
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/send_sms?phone=${phone.value}`, { method: 'POST' })
+    const data = await res.json()
+    if (data.success) {
+      countdown.value = 60
+      countdownTimer = setInterval(() => {
+        countdown.value--
+        if (countdown.value <= 0) clearInterval(countdownTimer)
+      }, 1000)
+    } else {
+      error.value = data.error || '发送失败'
+    }
+  } catch (e) {
+    error.value = '网络错误'
+  }
+}
+
 async function handleRegister() {
+  if (!smsCode.value || smsCode.value.length !== 6) {
+    error.value = '请输入6位验证码'
+    return
+  }
+  if (!password.value || password.value.length < 6) {
+    error.value = '密码至少6位'
+    return
+  }
   error.value = ''
   loading.value = true
   try {
     const res = await fetch(`${API_BASE}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: phone.value, password: password.value, nickname: nickname.value })
+      body: JSON.stringify({
+        phone: phone.value,
+        password: password.value,
+        nickname: nickname.value,
+        sms_code: smsCode.value
+      })
     })
     const data = await res.json()
-    
+
     if (data.success) {
       localStorage.setItem('demoppt_token', data.token)
       localStorage.setItem('demoppt_user', JSON.stringify({

@@ -69,6 +69,33 @@
       </div>
     </a-card>
 
+    <!-- New Features Shortcuts -->
+    <a-card title="新功能" :bordered="false" class="section-card">
+      <a-row :gutter="[16, 16]">
+        <a-col :xs="24" :sm="8">
+          <div class="feature-card" @click="router.push('/cover')">
+            <div class="feature-icon">📸</div>
+            <h3 class="feature-title">封面生成器</h3>
+            <p class="feature-desc">小红书/公众号/朋友圈封面一键生成</p>
+          </div>
+        </a-col>
+        <a-col :xs="24" :sm="8">
+          <div class="feature-card" @click="router.push('/template-hub')">
+            <div class="feature-icon">📚</div>
+            <h3 class="feature-title">模板中心</h3>
+            <p class="feature-desc">免费精品模板，分享赚积分</p>
+          </div>
+        </a-col>
+        <a-col :xs="24" :sm="8">
+          <div class="feature-card">
+            <div class="feature-icon">🌐</div>
+            <h3 class="feature-title">划词翻译</h3>
+            <p class="feature-desc">6种语言翻译，插入PPT内容</p>
+          </div>
+        </a-col>
+      </a-row>
+    </a-card>
+
     <!-- Features Section -->
     <a-card title="为什么选择 DemoPPT？" :bordered="false" class="section-card">
       <a-row :gutter="[24, 24]">
@@ -254,6 +281,7 @@ const startCreate = () => {
   border-radius: 8px;
   height: 100%;
   transition: all 0.3s;
+  cursor: pointer;
 }
 
 .feature-card:hover {

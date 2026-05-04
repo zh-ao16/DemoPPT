@@ -40,13 +40,19 @@
           </a-form-item>
 
           <a-form-item label="PPT主题" required>
-            <a-textarea
-              v-model:value="formData.topic"
-              placeholder="例如：2024年新能源汽车市场投资分析报告"
-              :rows="4"
-              showCount
-              :maxlength="500"
-            />
+            <a-input-group compact style="display: flex">
+              <a-textarea
+                v-model:value="formData.topic"
+                placeholder="例如：2024年新能源汽车市场投资分析报告"
+                :rows="4"
+                showCount
+                :maxlength="500"
+                style="flex: 1"
+              />
+              <a-button @click="openTranslator(formData.topic, 'topic')" style="height: auto; margin-left: 8px">
+                🌐 翻译
+              </a-button>
+            </a-input-group>
           </a-form-item>
 
           <a-form-item label="PPT副标题（可选）">
@@ -304,10 +310,33 @@
       <!-- 高级选项 -->
       <a-divider>高级选项（可选）</a-divider>
       <a-form layout="vertical" class="advanced-form">
-        <a-form-item>
-          <a-checkbox v-model:checked="speakerNotes">演讲者备注</a-checkbox>
-          <span class="option-tip">自动生成每页演讲提示</span>
-        </a-form-item>
+      <a-form-item>
+        <a-checkbox v-model:checked="speakerNotes">演讲者备注</a-checkbox>
+        <span class="option-tip">自动生成每页演讲提示</span>
+      </a-form-item>
+
+      <a-form-item>
+        <a-checkbox v-model:checked="faithfulMode">内容保真模式</a-checkbox>
+        <span class="option-tip">保留原文格式，AI仅排版不扩写</span>
+      </a-form-item>
+
+      <a-form-item label="中文排版">
+        <a-space direction="vertical" style="width: 100%">
+          <a-space>
+            <span style="width: 80px">字体：</span>
+            <a-select v-model:value="chineseTypography.font_family" style="width: 160px">
+              <a-select-option value="Microsoft YaHei">微软雅黑</a-select-option>
+              <a-select-option value="PingFang SC">苹方</a-select-option>
+              <a-select-option value="SimHei">黑体</a-select-option>
+              <a-select-option value="SimSun">宋体</a-select-option>
+            </a-select>
+          </a-space>
+          <a-space>
+            <a-checkbox v-model:checked="chineseTypography.punctuation_compress">标点压缩</a-checkbox>
+            <a-checkbox v-model:checked="chineseTypography.code_block_isolated">代码块隔离</a-checkbox>
+          </a-space>
+        </a-space>
+      </a-form-item>
         
         <a-form-item label="语言">
           <a-select v-model:value="language" style="width: 200px">
@@ -350,6 +379,7 @@
           <a-descriptions-item label="页数">{{ outline.length }} 页</a-descriptions-item>
           <a-descriptions-item label="模板">{{ getTemplateName(selectedTemplate) }}</a-descriptions-item>
           <a-descriptions-item label="演讲备注">{{ speakerNotes ? '✅ 开启' : '❌ 关闭' }}</a-descriptions-item>
+          <a-descriptions-item label="内容保真">{{ faithfulMode ? '✅ 开启' : '❌ 关闭' }}</a-descriptions-item>
           <a-descriptions-item label="语言">{{ language === 'zh' ? '简体中文' : language === 'en' ? 'English' : '繁體中文' }}</a-descriptions-item>
           <a-descriptions-item v-if="brandName" label="品牌名称">{{ brandName }}</a-descriptions-item>
           <a-descriptions-item v-if="brandColor" label="主题色">{{ brandColor }}</a-descriptions-item>
@@ -401,13 +431,18 @@
         </template>
       </a-result>
     </a-card>
+
+    <!-- Translator Modal -->
+    <Translator ref="translatorRef" :showInsertBtn="true" @insert="handleTranslateInsert" />
   </div>
 </template>
 
 <script>
+import Translator from '../components/Translator.vue'
 const API = 'http://localhost:8000/api'
 export default {
   name: 'Create',
+  components: { Translator },
   data() {
     return {
       step: 1,
@@ -426,6 +461,15 @@ export default {
       brandColor: '',
       brandName: '',
       brandLogo: '',
+      // 内容保真模式
+      faithfulMode: true,
+      // 中文排版选项
+      chineseTypography: {
+        font_family: 'Microsoft YaHei',
+        punctuation_compress: true,
+        paragraph_indent: 2,
+        code_block_isolated: true
+      },
       downloadUrl: '',
       allSelected: false,
       selectedPages: [],
@@ -700,6 +744,8 @@ export default {
             outline: outlineWithCharts,
             template: this.selectedTemplate,
             speaker_notes: this.speakerNotes,
+            faithful_mode: this.faithfulMode,
+            chinese_typography: this.chineseTypography,
             language: this.language,
             brand_name: this.brandName || undefined,
             brand_logo: this.brandLogo || undefined,
@@ -834,6 +880,20 @@ export default {
           })
         })
       } catch (e) {}
+    },
+    openTranslator(text, field) {
+      this.$refs.translatorRef.open(text)
+      this._translateTargetField = field
+    },
+    handleTranslateInsert(translatedText) {
+      // 将翻译结果插入到对应字段
+      if (this._translateTargetField === 'topic') {
+        this.formData.topic = translatedText
+      } else if (this._translateTargetField === 'subtitle') {
+        this.formData.subtitle = translatedText
+      } else if (this._translateTargetField === 'refContent') {
+        this.formData.refContent = translatedText
+      }
     },
     reset() {
       this.step = 1

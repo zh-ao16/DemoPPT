@@ -160,7 +160,6 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { message } from 'ant-design-vue'
 
 const API_BASE = 'http://localhost:8000'
 

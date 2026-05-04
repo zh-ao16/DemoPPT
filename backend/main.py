@@ -8,9 +8,11 @@ from typing import Optional, List
 import asyncio
 import os
 from pathlib import Path
+import sqlite3
 import uuid
 import json
 import re
+from datetime import datetime
 from knowledge_base import kb, parse_document, KnowledgeBase
 from industry_data import INDUSTRY_KB, get_industry_context, search_and_get_context
 from color_palette import generate_palette, get_preset_palette, list_preset_palettes
@@ -57,6 +59,11 @@ class ContentRequest(BaseModel):
     language: Optional[str] = "zh"  # zh/en/zh-TW
     # AI模型配置（用户自定义）
     model_config_id: Optional[int] = None  # 用户配置的模型ID
+    # 内容保真模式
+    faithful_mode: Optional[bool] = True  # 默认开启，AI仅排版不扩写
+    preserve_markers: Optional[List[int]] = []  # 用户标记的"请勿改动"段落索引列表
+    # 中文排版选项
+    chinese_typography: Optional[dict] = None  # {font_family, punctuation_compress, paragraph_indent, code_block_isolated}
 
 class DigitalHumanRequest(BaseModel):
     text: str
@@ -67,6 +74,8 @@ class DocumentConvertRequest(BaseModel):
     industry: str = "general"
     template: str = "business"
     model_config_id: Optional[int] = None  # 用户配置的模型ID
+    faithful_mode: Optional[bool] = True
+    chinese_typography: Optional[dict] = None
 
 # 行业模板配置
 INDUSTRY_TEMPLATES = {
@@ -92,7 +101,7 @@ INDUSTRY_TEMPLATES = {
     },
     "technology": {
         "name": "科技互联网",
-        "templates": ["tech", "cyber", "future"],
+        "templates": ["tech", "cyber", "future", "code_dark", "algorithm_blue", "architecture_gray", "debug_green", "doc_white"],
         "color": "#1a1a4e"
     },
     "government": {
@@ -927,8 +936,51 @@ def get_industry_prompt(industry: str, chapter_title: str) -> tuple:
     template = config["content_template"].format(title=chapter_title)
     return config["system"], template
 
+
+def get_faithful_prompt(chapter_title: str, preserve_indices: list = None) -> tuple:
+    """内容保真模式的prompt - AI仅排版，不扩写"""
+    system_prompt = """你是一个专业的中文PPT排版助手。
+【核心原则】用户的原始内容必须完整保留，不得自行添加、删减或改写任何内容。
+你的任务是根据用户提供的章节标题，选择合适的PPT模板进行排版。
+严格遵循用户指定的章节结构，不要自行增加或删除章节。
+如用户标记了"请勿改动"的段落，必须保持原样。"""
+    template = f"""【章节标题】：{chapter_title}
+【任务】：请根据上述标题，生成适合PPT展示的排版内容。
+
+【重要约束】：
+- 不得添加标题中未包含的新内容点
+- 不得删除用户提供大纲中的任何内容
+- 不得改变用户原文的表述方式
+- 仅优化排版结构（标题层级、要点分组、视觉层次）
+
+请返回JSON格式：
+{{"heading": "主标题", "subheading": "副标题（可选）", "points": [
+  {{"heading": "小节标题", "content": "详细内容（保持原文，仅做格式化）"}},
+  ...
+]}}"""
+    return system_prompt, template
+
+
+def apply_chinese_typesetting(text: str, options: dict = None) -> str:
+    """应用中文排版优化（标点压缩/段首缩进/字体优先级标注）"""
+    if options is None:
+        options = {}
+    punctuation_compress = options.get('punctuation_compress', True)
+    paragraph_indent = options.get('paragraph_indent', 2)
+
+    if not text:
+        return text
+
+    # 标点压缩：行尾句号不单独占行
+    if punctuation_compress:
+        text = re.sub(r'([。！？；])\s*\n', r'\1\n', text)
+        text = re.sub(r'([。！？])([」』】》）】])', r'\1\2', text)
+
+    return text
+
+
 def parse_ai_content(ai_output: str) -> dict:
-    """解析AI输出的JSON内容，提取结构化数据"""
+    """解析AI返回的内容为结构化dict"""
     try:
         match = re.search(r'\{.*\}', ai_output, re.DOTALL)
         if match:
@@ -2093,6 +2145,12 @@ def generate_content(req: ContentRequest):
             "chinese": {"title": (26, 32, 44), "accent": (113, 128, 150), "bg": (255, 255, 255)},
             "ink_wash": {"title": (45, 55, 72), "accent": (160, 174, 192), "bg": (255, 255, 255)},
             "red_gold": {"title": (116, 42, 42), "accent": (214, 158, 46), "bg": (255, 255, 255)},
+            # 技术场景代码演示模板
+            "code_dark": {"title": (46, 229, 183), "accent": (0, 212, 255), "bg": (22, 27, 34)},      # 代码展示深色
+            "algorithm_blue": {"title": (28, 69, 135), "accent": (0, 150, 199), "bg": (245, 247, 250)}, # 算法解析蓝
+            "architecture_gray": {"title": (52, 58, 64), "accent": (80, 156, 123), "bg": (248, 249, 250)}, # 架构图灰
+            "debug_green": {"title": (20, 83, 45), "accent": (52, 211, 153), "bg": (13, 17, 22)},     # 调试日志绿
+            "doc_white": {"title": (30, 41, 59), "accent": (59, 130, 246), "bg": (255, 255, 255)},     # 技术文档白
         }
 
         colors = template_colors.get(req.template, template_colors["academic"])
@@ -2133,14 +2191,23 @@ def generate_content(req: ContentRequest):
 
             # 为每个章节生成结构化内容
             if page_type == "content":
-                update_progress("generating", int(page_progress + 5), f"正在为「{chapter_title[:15]}」生成内容...", current_page)
+                update_progress("generating", int(page_progress + 5), f"正在为「{chapter_title[:15]}」生成内容...（{'保真模式' if req.faithful_mode else '增强模式'}）", current_page)
                 kb_context = kb.get_context_for_prompt(chapter_title, industry, top_k=2)
-                system_prompt, prompt_template = get_industry_prompt(industry, chapter_title)
+                # faithful_mode控制AI是否仅做排版不扩写
+                if req.faithful_mode:
+                    system_prompt, prompt_template = get_faithful_prompt(chapter_title, req.preserve_markers)
+                else:
+                    system_prompt, prompt_template = get_industry_prompt(industry, chapter_title)
                 if kb_context:
                     system_prompt = system_prompt + f"\n\n【知识库参考资料】：\n{kb_context}"
                 ai_result = call_ai_model(prompt_template, system=system_prompt, user_api_config=user_api_config)
                 page_data = parse_ai_content(ai_result)
                 page_data["title"] = chapter_title
+                # 应用中文排版优化（如果用户配置了选项）
+                if req.chinese_typography:
+                    for point in page_data.get("points", []):
+                        if "content" in point:
+                            point["content"] = apply_chinese_typesetting(point["content"], req.chinese_typography)
             elif page_type == "cover":
                 page_data = {
                     "title": chapter_title,
@@ -2389,6 +2456,45 @@ async def download(filename: str):
     from fastapi.responses import FileResponse
     return FileResponse(str(filepath), media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation", filename=filename)
 
+@app.get("/api/ppt/{filename}/slides")
+async def get_ppt_slides(filename: str):
+    """获取PPT幻灯片信息和备注"""
+    # [SEC-FIX] 防止路径遍历攻击
+    if ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="无效的文件名")
+    filepath = OUTPUT_DIR / filename
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail="文件不存在")
+    
+    try:
+        from pptx import Presentation
+        import io
+        import base64
+        
+        prs = Presentation(str(filepath))
+        slides = []
+        
+        for idx, slide in enumerate(prs.slides):
+            # 提取备注
+            notes_text = ""
+            if slide.has_notes_slide:
+                notes_slide = slide.notes_slide
+                if notes_slide and notes_slide.notes_text_frame:
+                    notes_text = notes_slide.notes_text_frame.text.strip()
+            
+            slides.append({
+                "index": idx,
+                "notes": notes_text
+            })
+        
+        return {
+            "success": True,
+            "slide_count": len(prs.slides),
+            "slides": slides
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"读取PPT失败: {str(e)}")
+
 @app.get("/api/templates")
 async def get_templates():
     """获取模板列表（20款精选模板）"""
@@ -2414,6 +2520,11 @@ async def get_templates():
         {"id": "chinese", "name": "中国风", "description": "水墨文化", "color": "#1a202c", "accent": "#718096"},
         {"id": "ink_wash", "name": "水墨风", "description": "山水意境", "color": "#2d3748", "accent": "#a0aec0"},
         {"id": "red_gold", "name": "中国红金", "description": "红金传统", "color": "#742a2a", "accent": "#d69e2e"},
+        {"id": "code_dark", "name": "代码深色", "description": "VS Code深色，代码演示专用", "color": "#16211e", "accent": "#00d4ff"},
+        {"id": "algorithm_blue", "name": "算法解析", "description": "清爽蓝底，算法步骤演示", "color": "#1c4587", "accent": "#009bc7"},
+        {"id": "architecture_gray", "name": "架构图灰", "description": "浅灰背景，系统架构展示", "color": "#343a40", "accent": "#509c7b"},
+        {"id": "debug_green", "name": "调试日志", "description": "终端绿黑，调试信息展示", "color": "#143d21", "accent": "#34d399"},
+        {"id": "doc_white", "name": "技术文档", "description": "纯白底，技术文档阅读感", "color": "#1e293b", "accent": "#3b82f6"},
     ]}
 
 @app.get("/api/color_palettes")
@@ -2613,6 +2724,12 @@ async def convert_document(req: DocumentConvertRequest):
         "classic_blue": {"title": (43, 108, 176), "accent": (99, 179, 237)},
         "gray_elegant": {"title": (45, 55, 72), "accent": (113, 128, 150)},
         "ink_wash": {"title": (45, 55, 72), "accent": (160, 174, 192)},
+        # 技术场景代码演示模板
+        "code_dark": {"title": (46, 229, 183), "accent": (0, 212, 255)},
+        "algorithm_blue": {"title": (28, 69, 135), "accent": (0, 150, 199)},
+        "architecture_gray": {"title": (52, 58, 64), "accent": (80, 156, 123)},
+        "debug_green": {"title": (20, 83, 45), "accent": (52, 211, 153)},
+        "doc_white": {"title": (30, 41, 59), "accent": (59, 130, 246)},
     }
     colors = template_colors.get(template_id, template_colors["business"])
 
@@ -2660,10 +2777,17 @@ async def convert_document(req: DocumentConvertRequest):
         chapter_title = page.get("title", "")
 
         if page_type == "content":
-            system_prompt, prompt_template = get_industry_prompt(req.industry, chapter_title)
+            if req.faithful_mode:
+                system_prompt, prompt_template = get_faithful_prompt(chapter_title)
+            else:
+                system_prompt, prompt_template = get_industry_prompt(req.industry, chapter_title)
             ai_result = call_ai_model(prompt_template, system=system_prompt, user_api_config=user_api_config)
             page_data = parse_ai_content(ai_result)
             page_data["title"] = chapter_title
+            if req.chinese_typography:
+                for point in page_data.get("points", []):
+                    if "content" in point:
+                        point["content"] = apply_chinese_typesetting(point["content"], req.chinese_typography)
         elif page_type == "cover":
             page_data = {"title": chapter_title, "subtitle": f"文档转换 | {industry_config['name']}", "points": []}
         elif page_type == "toc":
@@ -2797,6 +2921,12 @@ async def import_document(req: DocumentImportRequest):
             "academic": {"title": (26, 54, 93), "accent": (44, 82, 130), "bg": (255, 255, 255)},
             "business": {"title": (44, 82, 130), "accent": (237, 137, 54), "bg": (255, 255, 255)},
             "tech": {"title": (26, 26, 78), "accent": (0, 212, 255), "bg": (255, 255, 255)},
+            # 技术场景代码演示模板
+            "code_dark": {"title": (46, 229, 183), "accent": (0, 212, 255), "bg": (22, 27, 34)},
+            "algorithm_blue": {"title": (28, 69, 135), "accent": (0, 150, 199), "bg": (245, 247, 250)},
+            "architecture_gray": {"title": (52, 58, 64), "accent": (80, 156, 123), "bg": (248, 249, 250)},
+            "debug_green": {"title": (20, 83, 45), "accent": (52, 211, 153), "bg": (13, 17, 22)},
+            "doc_white": {"title": (30, 41, 59), "accent": (59, 130, 246), "bg": (255, 255, 255)},
         }
         colors = template_colors.get(req.template, template_colors["academic"])
 
@@ -3157,6 +3287,185 @@ class BeautifyRequest(BaseModel):
     style: str = "modern"  # modern/elegant/vivid/tech
     model_config_id: Optional[int] = None  # 用户配置的模型ID
 
+
+# ============ 封面生成相关 ============
+class CoverRequest(BaseModel):
+    """封面生成请求"""
+    topic: str  # 封面主题
+    style: str = "时尚感"  # 时尚感/简约风/节日感/商务风
+    aspect: str = "3:4"  # 3:4竖图/16:9横图
+
+
+@app.post("/api/generate_cover")
+async def api_generate_cover(req: CoverRequest):
+    """生成小红书/公众号封面"""
+    try:
+        from pptx import Presentation
+        from pptx.util import Inches, Pt, Emu
+        from pptx.dml.color import RGBColor
+        from pptx.enum.text import PP_ALIGN
+        from pptx.oxml.ns import nsmap
+        import io
+
+        # 尺寸配置（单位：英寸，1280x1706像素 @96dpi = 13.33x17.77英寸）
+        if req.aspect == "16:9":
+            width = Inches(13.33)
+            height = Inches(7.5)
+        else:  # 3:4 竖图
+            width = Inches(7.5)
+            height = Inches(10)
+
+        # 创建空白演示文稿（单页封面）
+        prs = Presentation()
+        prs.slide_width = width
+        prs.slide_height = height
+
+        # 添加空白幻灯片
+        blank_layout = prs.slide_layouts[6]  # 空白布局
+        slide = prs.slides.add_slide(blank_layout)
+
+        # 风格配色方案
+        style_colors = {
+            "时尚感": {
+                "bg": "#FF6B9D",  # 粉红渐变起点
+                "bg2": "#C44569",  # 暗红
+                "accent": "#FFD93D",  # 金黄
+                "text": "#FFFFFF",
+                "subtitle": "#FFE4EC"
+            },
+            "简约风": {
+                "bg": "#2C3E50",
+                "bg2": "#34495E",
+                "accent": "#ECF0F1",
+                "text": "#FFFFFF",
+                "subtitle": "#BDC3C7"
+            },
+            "节日感": {
+                "bg": "#E74C3C",
+                "bg2": "#C0392B",
+                "accent": "#F1C40F",
+                "text": "#FFFFFF",
+                "subtitle": "#FDEBD0"
+            },
+            "商务风": {
+                "bg": "#1A365D",
+                "bg2": "#2C5282",
+                "accent": "#ED8936",
+                "text": "#FFFFFF",
+                "subtitle": "#CBD5E0"
+            }
+        }
+
+        colors = style_colors.get(req.style, style_colors["时尚感"])
+
+        # 绘制背景渐变（用矩形模拟）
+        from pptx.shapes.autoshape import Shape
+        from pptx.enum.shapes import MSO_SHAPE_TYPE
+
+        # 背景色块1 - 主背景
+        bg_shape = slide.shapes.add_shape(
+            1,  # Rectangle
+            0, 0, width, height
+        )
+        bg_shape.fill.solid()
+        bg_shape.fill.fore_color.rgb = RGBColor(
+            int(colors["bg"][1:3], 16),
+            int(colors["bg"][3:5], 16),
+            int(colors["bg"][5:7], 16)
+        )
+        bg_shape.line.fill.background()
+
+        # 添加装饰圆形（右上角大圆）
+        circle1 = slide.shapes.add_shape(
+            9,  # Oval
+            width - Inches(3), -Inches(1), Inches(4), Inches(4)
+        )
+        circle1.fill.solid()
+        def parse_color(c):
+            if c.startswith("#") and len(c) == 7:
+                return int(c[1:3], 16), int(c[3:5], 16), int(c[5:7], 16)
+            return 255, 215, 61
+
+        accent_color = parse_color(colors["accent"])
+        circle1.fill.fore_color.rgb = RGBColor(*accent_color)
+        circle1.line.fill.background()
+
+        # 添加装饰圆形（左下角小圆）
+        circle2 = slide.shapes.add_shape(
+            9,
+            -Inches(0.5), height - Inches(2), Inches(2), Inches(2)
+        )
+        circle2.fill.solid()
+        circle2.fill.fore_color.rgb = RGBColor(255, 255, 255)
+        circle2.fill.fore_color.brightness = 0.3
+        circle2.line.fill.background()
+
+        # 主标题
+        title_box = slide.shapes.add_textbox(
+            Inches(0.5), Inches(3.5), width - Inches(1), Inches(2)
+        )
+        title_frame = title_box.text_frame
+        title_frame.word_wrap = True
+        title_p = title_frame.paragraphs[0]
+        title_p.text = req.topic
+        title_p.font.size = Pt(54)
+        title_p.font.bold = True
+        title_p.font.color.rgb = RGBColor(255, 255, 255)
+        title_p.alignment = PP_ALIGN.CENTER
+
+        # 副标题
+        subtitle_box = slide.shapes.add_textbox(
+            Inches(0.5), Inches(5.8), width - Inches(1), Inches(1)
+        )
+        subtitle_frame = subtitle_box.text_frame
+        subtitle_p = subtitle_frame.paragraphs[0]
+        # 根据不同平台添加副标题
+        platform_tags = {
+            "小红书": "📕 分享美好生活",
+            "公众号": "📱 关注了解更多",
+            "朋友圈": "📸 记录精彩瞬间",
+            "微博": "🌐 发现新鲜事"
+        }
+        subtitle_p.text = platform_tags.get(req.style, "✨ 精彩内容")
+        subtitle_p.font.size = Pt(24)
+        def parse_color(c):
+            if c.startswith("#") and len(c) == 7:
+                return int(c[1:3], 16), int(c[3:5], 16), int(c[5:7], 16)
+            return 255, 228, 236
+        
+        sub_color = parse_color(colors["subtitle"])
+        subtitle_p.font.color.rgb = RGBColor(*sub_color)
+        subtitle_p.alignment = PP_ALIGN.CENTER
+
+        # 品牌Logo位置（右下角）
+        logo_box = slide.shapes.add_textbox(
+            width - Inches(2.5), height - Inches(1.5), Inches(2), Inches(0.8)
+        )
+        logo_frame = logo_box.text_frame
+        logo_p = logo_frame.paragraphs[0]
+        logo_p.text = "YOUR LOGO"
+        logo_p.font.size = Pt(14)
+        logo_p.font.color.rgb = RGBColor(200, 200, 200)
+        logo_p.alignment = PP_ALIGN.RIGHT
+
+        # 保存文件
+        filename = f"cover_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.pptx"
+        filepath = OUTPUT_DIR / filename
+        prs.save(str(filepath))
+
+        return {
+            "success": True,
+            "filename": filename,
+            "download_url": f"/api/download/{filename}",
+            "message": "封面生成成功"
+        }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"success": False, "message": f"封面生成失败: {str(e)}"}
+
+
 @app.post("/api/beautify")
 async def beautify_content(req: BeautifyRequest):
     """一键美化 - AI自动优化PPT内容排版和表达"""
@@ -3219,6 +3528,136 @@ async def beautify_content(req: BeautifyRequest):
             
     except Exception as e:
         return {"success": False, "message": f"美化失败: {str(e)}"}
+
+
+# ============================================================
+# 划词翻译 API
+# ============================================================
+
+class TranslateTextRequest(BaseModel):
+    """划词翻译请求"""
+    texts: List[str]           # 要翻译的文本列表（支持批量）
+    target_lang: str = "en"    # 目标语言：en/ja/ko/es/fr/de
+    tone: str = "日常"         # 语气风格：正式/日常/商务
+    model_config_id: Optional[int] = None  # 用户配置的模型ID
+
+
+LANG_NAMES = {
+    "en": "英文",
+    "ja": "日文",
+    "ko": "韩文",
+    "es": "西班牙文",
+    "fr": "法文",
+    "de": "德文",
+}
+
+TONE_PROMPTS = {
+    "正式": "正式、严谨、专业的语气",
+    "日常": "自然、口语化、日常交流的语气",
+    "商务": "商务、专业、得体的语气",
+}
+
+
+@app.post("/api/translate_text")
+async def translate_text(req: TranslateTextRequest):
+    """划词翻译 - 使用AI模型翻译文本，保留原文+译文对照格式"""
+    try:
+        if not req.texts or not any(t.strip() for t in req.texts):
+            return {"success": False, "message": "请提供有效的翻译文本"}
+
+        # 获取用户配置的模型
+        user_api_config = None
+        if req.model_config_id:
+            from model_config import get_config_by_id, get_default_config
+            user_api_config = get_config_by_id(req.model_config_id, user_id=0)
+            if not user_api_config:
+                user_api_config = get_default_config(user_id=0)
+        else:
+            from model_config import get_default_config
+            user_api_config = get_default_config(user_id=0)
+
+        target_lang_name = LANG_NAMES.get(req.target_lang, req.target_lang)
+        tone_prompt = TONE_PROMPTS.get(req.tone, "日常")
+
+        # 构建批量翻译的prompt
+        texts_for_translation = [t.strip() for t in req.texts if t.strip()]
+
+        prompt = f"""你是一个专业的多语言翻译专家。请将以下{len(texts_for_translation)}段中文文本翻译成{target_lang_name}。
+
+翻译风格要求：{tone_prompt}
+
+翻译规则：
+1. 保持原文的意思和语气
+2. 译文的格式和段落数量与原文一致
+3. 如果原文是口语化内容，译文也要口语化
+4. 专有名词、术语、人名等保留不译
+
+原文列表：
+{chr(10).join([f'[{i+1}] {t}' for i, t in enumerate(texts_for_translation)])}
+
+请直接输出JSON格式的翻译结果，必须严格保持以下格式：
+{{
+  "translations": [
+    {{"original": "[1]原文", "translated": "翻译后的文本"}},
+    {{"original": "[2]原文", "translated": "翻译后的文本"}}
+  ]
+}}
+
+只输出JSON，不要其他任何解释文字："""
+
+        result = call_ai_model(
+            prompt,
+            system=f"你是一个专业的{target_lang_name}翻译专家，始终只返回JSON格式的翻译结果。",
+            user_api_config=user_api_config
+        )
+
+        import re, json as json_lib
+        # 尝试解析JSON
+        json_match = re.search(r'\{[\s\S]*\}', result)
+        if json_match:
+            parsed = json_lib.loads(json_match.group())
+            translations = parsed.get("translations", [])
+            if translations:
+                return {
+                    "success": True,
+                    "translations": translations,
+                    "target_lang": req.target_lang,
+                    "target_lang_name": target_lang_name,
+                    "tone": req.tone,
+                    "count": len(translations),
+                    "message": f"成功翻译{len(translations)}段文本"
+                }
+
+        # 降级：如果解析失败，逐条翻译
+        translations = []
+        for i, text in enumerate(texts_for_translation):
+            single_prompt = f"""将以下中文文本翻译成{target_lang_name}，语气风格：{tone_prompt}
+
+原文：{text}
+
+直接输出翻译结果，不要其他内容："""
+            trans_result = call_ai_model(
+                single_prompt,
+                system=f"你是一个专业的{target_lang_name}翻译专家，只输出翻译后的文本。",
+                user_api_config=user_api_config
+            )
+            translations.append({
+                "original": f"[{i+1}]{text}",
+                "translated": trans_result.strip()
+            })
+
+        return {
+            "success": True,
+            "translations": translations,
+            "target_lang": req.target_lang,
+            "target_lang_name": target_lang_name,
+            "tone": req.tone,
+            "count": len(translations),
+            "message": f"成功翻译{len(translations)}段文本"
+        }
+
+    except Exception as e:
+        return {"success": False, "message": f"翻译失败: {str(e)}"}
 
 
 # ============================================================
@@ -3436,6 +3875,7 @@ class RegisterReq(BaseModel):
     phone: str
     password: str
     nickname: str = ""
+    sms_code: str = ""
 
 class LoginReq(BaseModel):
     phone: str
@@ -3485,7 +3925,9 @@ def get_user_from_header(authorization: str = Header(None)) -> dict | None:
 
 @app.post("/api/auth/register")
 def api_register(req: RegisterReq):
-    """用户注册"""
+    """用户注册（需先通过短信验证码）"""
+    if req.sms_code and not verify_sms_code(req.phone, req.sms_code):
+        return {"success": False, "error": "验证码错误或已过期"}
     result = register(req.phone, req.password, req.nickname)
     return result
 
@@ -3679,6 +4121,188 @@ async def api_test_model(
         return {"success": True, "message": "连接成功", "response": result["content"][:100]}
     return {"success": False, "error": result.get("error", "测试失败")}
 
+
+# ============================================================
+# 模板分享中心 - 用户分享模板
+# ============================================================
+from fastapi import UploadFile, File
+
+SHARE_TEMPLATES_DIR = OUTPUT_DIR / "share_templates"
+SHARE_TEMPLATES_DIR.mkdir(exist_ok=True)
+
+# 模板分享表初始化
+def init_template_shares_db():
+    """初始化模板分享数据库"""
+    conn = sqlite3.connect(str(Path(__file__).parent / "demoppt.db"), check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS template_shares (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            template_name VARCHAR(200) NOT NULL,
+            template_file VARCHAR(500) NOT NULL,
+            description TEXT DEFAULT '',
+            tags VARCHAR(500) DEFAULT '',
+            status VARCHAR(20) DEFAULT 'pending',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_template_shares_db()
+
+@app.post("/api/template/share")
+async def api_share_template(
+    template_name: str,
+    description: str = "",
+    tags: str = "",
+    file: UploadFile = File(...),
+    user = Depends(get_user_from_header)
+):
+    """上传分享模板（status=pending）"""
+    if not user:
+        return {"success": False, "error": "请先登录"}
+    
+    # 验证文件类型
+    if not file.filename.endswith('.pptx'):
+        return {"success": False, "error": "只支持.pptx文件"}
+    
+    # 生成uuid文件名
+    file_ext = ".pptx"
+    unique_name = f"share_{uuid.uuid4().hex}{file_ext}"
+    file_path = SHARE_TEMPLATES_DIR / unique_name
+    
+    # 保存文件
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # 存入数据库
+    conn = sqlite3.connect(str(Path(__file__).parent / "demoppt.db"), check_same_thread=False)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO template_shares (user_id, template_name, template_file, description, tags, status)
+        VALUES (?, ?, ?, ?, ?, 'pending')
+    """, (user["user_id"], template_name, unique_name, description, tags))
+    conn.commit()
+    template_id = cursor.lastrowid
+    conn.close()
+    
+    return {"success": True, "template_id": template_id, "message": "上传成功，待审核"}
+
+@app.get("/api/template/public")
+def api_get_public_templates():
+    """获取已审核通过的模板列表"""
+    conn = sqlite3.connect(str(Path(__file__).parent / "demoppt.db"), check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, template_name, template_file, description, tags, created_at
+        FROM template_shares
+        WHERE status = 'approved'
+        ORDER BY created_at DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    
+    templates = []
+    for row in rows:
+        templates.append({
+            "id": row["id"],
+            "template_name": row["template_name"],
+            "template_file": row["template_file"],
+            "description": row["description"],
+            "tags": row["tags"],
+            "user_id": row["user_id"],
+            "created_at": row["created_at"]
+        })
+    
+    return {"success": True, "templates": templates}
+
+@app.get("/api/template/download/{template_id}")
+def api_download_template(template_id: int):
+    """下载模板文件"""
+    conn = sqlite3.connect(str(Path(__file__).parent / "demoppt.db"), check_same_thread=False)
+    cursor = conn.cursor()
+    cursor.execute("SELECT template_file, template_name FROM template_shares WHERE id = ? AND status = 'approved'", (template_id,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        return {"success": False, "error": "模板不存在或未审核通过"}
+    
+    file_path = SHARE_TEMPLATES_DIR / row["template_file"]
+    if not file_path.exists():
+        return {"success": False, "error": "文件不存在"}
+    
+    from fastapi.responses import FileResponse
+    return FileResponse(
+        path=file_path,
+        filename=f"{row['template_name']}.pptx",
+        media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    )
+
+@app.put("/api/template/audit/{template_id}")
+def api_audit_template(
+    template_id: int,
+    status: str,  # approved 或 rejected
+    user = Depends(get_user_from_header)
+):
+    """审核模板（管理员）"""
+    if not user:
+        return {"success": False, "error": "请先登录"}
+    
+    # 检查是否是管理员（简单检查：user_id=1为管理员）
+    if user["user_id"] != 1:
+        return {"success": False, "error": "只有管理员可以审核"}
+    
+    if status not in ("approved", "rejected"):
+        return {"success": False, "error": "status必须是approved或rejected"}
+    
+    conn = sqlite3.connect(str(Path(__file__).parent / "demoppt.db"), check_same_thread=False)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE template_shares SET status = ? WHERE id = ?", (status, template_id))
+    affected = cursor.rowcount
+    conn.commit()
+    conn.close()
+    
+    if affected == 0:
+        return {"success": False, "error": "模板不存在"}
+    
+    return {"success": True, "message": f"模板已{('通过' if status == 'approved' else '拒绝')}审核"}
+
+@app.get("/api/template/my")
+def api_get_my_templates(user = Depends(get_user_from_header)):
+    """获取我分享的模板列表"""
+    if not user:
+        return {"success": False, "error": "请先登录"}
+    
+    conn = sqlite3.connect(str(Path(__file__).parent / "demoppt.db"), check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, template_name, description, tags, status, created_at
+        FROM template_shares
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+    """, (user["user_id"],))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    templates = []
+    for row in rows:
+        templates.append({
+            "id": row["id"],
+            "template_name": row["template_name"],
+            "description": row["description"],
+            "tags": row["tags"],
+            "status": row["status"],
+            "created_at": row["created_at"]
+        })
+    
+    return {"success": True, "templates": templates}
 
 if __name__ == "__main__":
     import uvicorn
