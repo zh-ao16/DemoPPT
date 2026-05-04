@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DemoPPT API 文档</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+        .header { background: linear-gradient(135deg, #1a1a4e 0%, #2c5282 100%); color: white; padding: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .header .version { opacity: 0.8; font-size: 0.9rem; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .search-box { margin-bottom: 1.5rem; }
+        .search-box input { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        .tag-section { background: white; border-radius: 8px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; }
+        .tag-header { background: #f8fafc; padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .tag-header h2 { font-size: 1.1rem; color: #2c5282; }
+        .tag-header .count { background: #e2e8f0; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; color: #64748b; }
+        .tag-content { display: none; }
+        .tag-content.active { display: block; }
+        .endpoint { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
+        .endpoint:last-child { border-bottom: none; }
+        .endpoint-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+        .method { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; color: white; text-transform: uppercase; }
+        .method.get { background: #22c55e; }
+        .method.post { background: #3b82f6; }
+        .method.put { background: #f59e0b; }
+        .method.delete { background: #ef4444; }
+        .endpoint-path { font-family: 'Monaco', 'Menlo', monospace; font-size: 0.9rem; color: #334155; }
+        .endpoint-summary { color: #64748b; font-size: 0.9rem; margin-left: auto; }
+        .endpoint-details { display: none; background: #f8fafc; padding: 1rem; border-radius: 6px; margin-top: 0.75rem; }
+        .endpoint:hover .endpoint-details { display: block; }
+        .param-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .param-table th, .param-table td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #e2e8f0; }
+        .param-table th { color: #64748b; font-weight: 500; }
+        .param-name { font-family: monospace; color: #7c3aed; }
+        .param-required { color: #ef4444; font-size: 0.7rem; }
+        .footer { text-align: center; padding: 2rem; color: #94a3b8; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DemoPPT API 文档</h1>
+        <div class="version">版本: 2.3.0 | 框架: FastAPI | 生成时间: 2026-05-04</div>
+    </div>
+    <div class="container">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="搜索 API 端点..." onkeyup="filterEndpoints()">
+        </div>
+
+        <div class="tag-section">
+            <div class="tag-header" onclick="toggleSection(this)">
+                <h2>Other</h2>
+                <span class="count">54 个端点</span>
+            </div>
+            <div class="tag-content">
+    
+                <div class="endpoint" data-search="/api/set_model Set Model">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/set_model</span>
+                        <span class="endpoint-summary">Set Model</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>设置默认AI模型</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">model</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/ Root">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/</span>
+                        <span class="endpoint-summary">Root</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>无</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/health Health">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/health</span>
+                        <span class="endpoint-summary">Health</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>无</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/generate_outline Generate Outline">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/generate_outline</span>
+                        <span class="endpoint-summary">Generate Outline</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>生成PPT大纲</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/preview_content Preview Content">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/preview_content</span>
+                        <span class="endpoint-summary">Preview Content</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>单页内容预览（不生成完整PPT，只预览该页AI会写什么）</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/progress/{session_id} Get Progress">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/progress/{session_id}</span>
+                        <span class="endpoint-summary">Get Progress</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>SSE端点：推送生成进度</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">session_id</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/generate_content Generate Content">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/generate_content</span>
+                        <span class="endpoint-summary">Generate Content</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>生成PPT内容并渲染 - 专业版（带进度推送）</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/download/{filename} Download">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/download/{filename}</span>
+                        <span class="endpoint-summary">Download</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>下载PPTX</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">filename</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/templates Get Templates">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/templates</span>
+                        <span class="endpoint-summary">Get Templates</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取模板列表（20款精选模板）</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/color_palettes Get Color Palettes">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/color_palettes</span>
+                        <span class="endpoint-summary">Get Color Palettes</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取预设配色方案列表</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/generate_palette Api Generate Palette">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/generate_palette</span>
+                        <span class="endpoint-summary">Api Generate Palette</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>生成配色方案</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">color</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">palette_type</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/preview_palette Preview Palette">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/preview_palette</span>
+                        <span class="endpoint-summary">Preview Palette</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>预览配色方案 - 生成一张预览图</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">color</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">palette_type</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/industries Get Industries">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/industries</span>
+                        <span class="endpoint-summary">Get Industries</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取行业列表</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/convert_document Convert Document">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/convert_document</span>
+                        <span class="endpoint-summary">Convert Document</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>文档一键转PPT</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/upload_document Upload Document">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/upload_document</span>
+                        <span class="endpoint-summary">Upload Document</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>上传文档文件并转换为PPT</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">file</span></td><td>string</td><td>否</td><td>-</td></tr><tr><td><span class="param-name">industry</span></td><td>string</td><td>否</td><td>-</td></tr><tr><td><span class="param-name">template</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/digital_human Digital Human">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/digital_human</span>
+                        <span class="endpoint-summary">Digital Human</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>数字人播报生成</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/import_document Import Document">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/import_document</span>
+                        <span class="endpoint-summary">Import Document</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>文档导入 - 粘贴文本/Markdown，直接解析成PPT大纲并生成</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/polish_content Polish Content">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/polish_content</span>
+                        <span class="endpoint-summary">Polish Content</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>AI内容润色 - 扩写/精简/改写</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/search_image Search Image">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/search_image</span>
+                        <span class="endpoint-summary">Search Image</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>智能配图 - Wikipedia/Wikimedia免费图片（可商用）</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">keyword</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">style</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/export_video Export Video">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/export_video</span>
+                        <span class="endpoint-summary">Export Video</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>PPT转视频导出 - 将PPTX转换为MP4视频</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/beautify Beautify Content">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/beautify</span>
+                        <span class="endpoint-summary">Beautify Content</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>一键美化 - AI自动优化PPT内容排版和表达</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/kb/stats Kb Stats">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/kb/stats</span>
+                        <span class="endpoint-summary">Kb Stats</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>知识库统计</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/kb/documents Kb List Documents">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/kb/documents</span>
+                        <span class="endpoint-summary">Kb List Documents</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>列出知识库中所有文档</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/kb/documents Kb Add Document">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/kb/documents</span>
+                        <span class="endpoint-summary">Kb Add Document</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>添加文档到知识库</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/kb/upload Kb Upload">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/kb/upload</span>
+                        <span class="endpoint-summary">Kb Upload</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>上传文件到知识库</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/kb/documents/{doc_id} Kb Delete Document">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/api/kb/documents/{doc_id}</span>
+                        <span class="endpoint-summary">Kb Delete Document</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>删除知识库文档</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">doc_id</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/kb/search Kb Search">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/kb/search</span>
+                        <span class="endpoint-summary">Kb Search</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>搜索知识库</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">query</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">top_k</span></td><td>integer</td><td>否</td><td>-</td></tr><tr><td><span class="param-name">industry</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/kb/context Kb Get Context">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/kb/context</span>
+                        <span class="endpoint-summary">Kb Get Context</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取用于PPT生成的上下文（知识库召回）</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">topic</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">industry</span></td><td>string</td><td>否</td><td>-</td></tr><tr><td><span class="param-name">top_k</span></td><td>integer</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/search_industry Api Search Industry">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/search_industry</span>
+                        <span class="endpoint-summary">Api Search Industry</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>联网搜索行业数据</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">q</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">industry</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/industry_kb Api Industry Kb">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/industry_kb</span>
+                        <span class="endpoint-summary">Api Industry Kb</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取预置行业知识库内容</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">industry</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/history Add History">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/history</span>
+                        <span class="endpoint-summary">Add History</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>保存PPT生成记录</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/history List History">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/history</span>
+                        <span class="endpoint-summary">List History</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取历史记录列表</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">limit</span></td><td>integer</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/history/{hist_id} Delete History">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/api/history/{hist_id}</span>
+                        <span class="endpoint-summary">Delete History</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>删除历史记录</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">hist_id</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/auth/me Get Me">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/auth/me</span>
+                        <span class="endpoint-summary">Get Me</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取当前登录用户信息</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/auth/register Api Register">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/auth/register</span>
+                        <span class="endpoint-summary">Api Register</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>用户注册</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/auth/login Api Login">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/auth/login</span>
+                        <span class="endpoint-summary">Api Login</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>用户登录</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/auth/logout Api Logout">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/auth/logout</span>
+                        <span class="endpoint-summary">Api Logout</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>用户登出</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/auth/send_sms Api Send Sms">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/auth/send_sms</span>
+                        <span class="endpoint-summary">Api Send Sms</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>发送短信验证码</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">phone</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/auth/verify_sms Api Verify Sms">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/auth/verify_sms</span>
+                        <span class="endpoint-summary">Api Verify Sms</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>验证短信验证码</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">phone</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">code</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/auth/nickname Api Update Nickname">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/api/auth/nickname</span>
+                        <span class="endpoint-summary">Api Update Nickname</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>修改昵称</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">nickname</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/auth/password Api Change Password">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/api/auth/password</span>
+                        <span class="endpoint-summary">Api Change Password</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>修改密码</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/plans Api Get Plans">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/plans</span>
+                        <span class="endpoint-summary">Api Get Plans</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取所有套餐</p>
+                        <p>无参数</p>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/subscription Api Get Subscription">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/subscription</span>
+                        <span class="endpoint-summary">Api Get Subscription</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取当前订阅</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/subscription/create Api Create Subscription">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/subscription/create</span>
+                        <span class="endpoint-summary">Api Create Subscription</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>创建订阅订单</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/subscription/cancel Api Cancel Subscription">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/subscription/cancel</span>
+                        <span class="endpoint-summary">Api Cancel Subscription</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>取消订阅（关闭自动续费）</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/subscription/check Api Check Access">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/subscription/check</span>
+                        <span class="endpoint-summary">Api Check Access</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>检查访问权限</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/orders Api Get Orders">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/orders</span>
+                        <span class="endpoint-summary">Api Get Orders</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取订单列表</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/models Api Get Models">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/models</span>
+                        <span class="endpoint-summary">Api Get Models</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取模型列表（预置+用户配置）</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/models Api Add Model">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/models</span>
+                        <span class="endpoint-summary">Api Add Model</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>添加模型配置</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/models/default Api Get Default Model">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/api/models/default</span>
+                        <span class="endpoint-summary">Api Get Default Model</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>获取默认模型</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/models/{config_id} Api Update Model">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-path">/api/models/{config_id}</span>
+                        <span class="endpoint-summary">Api Update Model</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>更新模型配置</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">config_id</span><span class="param-required">*</span></td><td>integer</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/models/{config_id} Api Delete Model">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/api/models/{config_id}</span>
+                        <span class="endpoint-summary">Api Delete Model</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>删除模型配置</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">config_id</span><span class="param-required">*</span></td><td>integer</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/models/{config_id}/default Api Set Default Model">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/models/{config_id}/default</span>
+                        <span class="endpoint-summary">Api Set Default Model</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>设为默认模型</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">config_id</span><span class="param-required">*</span></td><td>integer</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">authorization</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        
+                <div class="endpoint" data-search="/api/models/test Api Test Model">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/api/models/test</span>
+                        <span class="endpoint-summary">Api Test Model</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <p><strong>说明：</strong>测试模型连接</p>
+                        
+                <table class="param-table">
+                    <tr><th>参数名</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><span class="param-name">api_base</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">api_key</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">model_name</span><span class="param-required">*</span></td><td>string</td><td>是</td><td>-</td></tr><tr><td><span class="param-name">provider</span></td><td>string</td><td>否</td><td>-</td></tr></table>
+                    </div>
+                </div>
+        </div></div>
+    </div>
+    <div class="footer">
+        <p>DemoPPT API 文档 | 由 OpenAPI 规范自动生成</p>
+    </div>
+    <script>
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            content.classList.toggle('active');
+        }
+        function filterEndpoints() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.endpoint').forEach(ep => {
+                const searchText = ep.getAttribute('data-search').toLowerCase();
+                ep.style.display = searchText.includes(query) ? 'block' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>
