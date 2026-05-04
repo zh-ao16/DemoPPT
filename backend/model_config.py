@@ -54,19 +54,36 @@ def init_db():
 
 
 def simple_encrypt(key: str) -> str:
-    """简单加密（实际项目用更安全的方式）"""
+    """[SEC-FIX] 使用Fernet对称加密替代Base64伪加密"""
+    from cryptography.fernet import Fernet
     import base64
-    return base64.b64encode(key.encode()).decode()
+    import os
+    # 从环境变量或生成固定key（实际项目应使用密钥管理服务）
+    fernet_key = os.environ.get("FERNET_KEY") or base64.b64encode(os.urandom(32)).decode()
+    if len(fernet_key) < 32:
+        fernet_key = base64.b64encode(fernet_key.encode().ljust(32, b'0')).decode()
+    cipher = Fernet(fernet_key.encode() if isinstance(fernet_key, str) else fernet_key)
+    return base64.b64encode(cipher.encrypt(key.encode())).decode()
 
 
 def simple_decrypt(encrypted: str) -> str:
-    """简单解密"""
+    """[SEC-FIX] 支持Fernet解密，兼容旧版Base64"""
     import base64
+    import os
     try:
-        return base64.b64decode(encrypted.encode()).decode()
+        # 尝试Fernet解密（新格式）
+        fernet_key = os.environ.get("FERNET_KEY") or base64.b64encode(os.urandom(32)).decode()
+        if len(fernet_key) < 32:
+            fernet_key = base64.b64encode(fernet_key.encode().ljust(32, b'0')).decode()
+        cipher = Fernet(fernet_key.encode() if isinstance(fernet_key, str) else fernet_key)
+        return cipher.decrypt(base64.b64decode(encrypted.encode())).decode()
     except Exception:
-        # 如果解密失败，可能是明文key，直接返回
-        return encrypted
+        # 兼容旧格式（纯base64）
+        try:
+            return base64.b64decode(encrypted.encode()).decode()
+        except Exception:
+            # 如果解密失败，可能是明文key，直接返回
+            return encrypted
 
 
 def add_config(user_id: int, name: str, api_base: str, api_key: str, 

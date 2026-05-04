@@ -2380,6 +2380,9 @@ def translate_page_content(page_data: dict, language: str) -> dict:
 @app.get("/api/download/{filename}")
 async def download(filename: str):
     """下载PPTX"""
+    # [SEC-FIX] 防止路径遍历攻击
+    if ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="无效的文件名")
     filepath = OUTPUT_DIR / filename
     if not filepath.exists():
         raise HTTPException(status_code=404, detail="文件不存在")

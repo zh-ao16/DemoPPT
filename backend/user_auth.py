@@ -303,7 +303,7 @@ def send_sms_code(phone: str, code: str) -> dict:
     
     # 模拟发送成功（实际项目要真实调用短信API）
     print(f"[SMS] 向 {phone} 发送验证码: {code}")
-    return {"success": True, "message": f"验证码已发送", "code": code}  # 调试用，生产环境删除code字段
+    return {"success": True, "message": "验证码已发送"}  # [SEC-FIX] 删除code字段防止泄露
 
 
 def verify_sms_code(phone: str, code: str) -> bool:
