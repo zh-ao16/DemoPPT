@@ -1,0 +1,190 @@
+{
+  "project": "DemoPPT",
+  "version": "2.4",
+  "brand_name": "DemoPPT",
+  "brand_description": "AI驱动的PPT生成工具，面向国内用户提供高质量、易上手的PPT制作体验",
+  
+  "colors": {
+    "brand": {
+      "primary": "#2563EB",
+      "primary_light": "#DBEAFE",
+      "primary_dark": "#1D4ED8",
+      "css_variable": ["--color-brand", "--color-brand-light", "--color-brand-dark"]
+    },
+    "functional": {
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "error": "#EF4444",
+      "info": "#6366F1",
+      "css_variable": ["--color-success", "--color-warning", "--color-error", "--color-info"]
+    },
+    "neutral": {
+      "title": "#111827",
+      "body": "#374151",
+      "secondary": "#6B7280",
+      "placeholder": "#9CA3AF",
+      "border": "#E5E7EB",
+      "background": "#F9FAFB",
+      "white": "#FFFFFF"
+    }
+  },
+  
+  "gradients": {
+    "brand": "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
+    "light": "linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%)"
+  },
+  
+  "typography": {
+    "fonts": {
+      "zh": "\"PingFang SC\", \"Microsoft YaHei\", \"Hiragino Sans GB\", sans-serif",
+      "en": "\"Inter\", \"SF Pro Display\", \"Segoe UI\", system-ui, sans-serif",
+      "num": "\"Inter\", \"Roboto\", system-ui, sans-serif"
+    },
+    "font_sizes": {
+      "h1": {"pc": "32px", "mobile": "24px", "weight": 600},
+      "h2": {"pc": "24px", "mobile": "20px", "weight": 600},
+      "h3": {"pc": "18px", "mobile": "16px", "weight": 500},
+      "body": {"pc": "16px", "mobile": "14px", "weight": 400},
+      "small": {"pc": "14px", "mobile": "12px", "weight": 400},
+      "caption": {"pc": "12px", "mobile": "10px", "weight": 400}
+    },
+    "line_heights": {
+      "body": "1.5-1.8",
+      "heading": "1.2-1.4",
+      "compact": "1.2"
+    }
+  },
+  
+  "spacing": {
+    "base_unit": "4px",
+    "scale": {
+      "space_1": "4px",
+      "space_2": "8px",
+      "space_3": "12px",
+      "space_4": "16px",
+      "space_5": "20px",
+      "space_6": "24px",
+      "space_8": "32px",
+      "space_10": "40px",
+      "space_12": "48px"
+    }
+  },
+  
+  "border_radius": {
+    "sm": "4px",
+    "md": "8px",
+    "lg": "12px",
+    "xl": "16px",
+    "full": "9999px"
+  },
+  
+  "shadows": {
+    "sm": "0 1px 2px rgba(0,0,0,0.05)",
+    "md": "0 4px 6px rgba(0,0,0,0.07)",
+    "lg": "0 10px 15px rgba(0,0,0,0.1)",
+    "xl": "0 20px 25px rgba(0,0,0,0.15)"
+  },
+  
+  "templates": {
+    "count": 12,
+    "list": [
+      {"id": "business", "name": "商务蓝", "scene": "企业汇报", "primary": "#1E40AF", "accent": "#F59E0B"},
+      {"id": "academic", "name": "学术风", "scene": "学术报告", "primary": "#1a365d", "accent": "#3B82F6"},
+      {"id": "tech", "name": "科技风", "scene": "科技展示", "primary": "#2563EB", "accent": "#06B6D4"},
+      {"id": "enterprise", "name": "企业蓝", "scene": "企业宣传", "primary": "#1E3A5F", "accent": "#3182CE"},
+      {"id": "cyber", "name": "赛博朋克", "scene": "创意展示", "primary": "#0f0f23", "accent": "#ff00ff"},
+      {"id": "gradient", "name": "渐变风", "scene": "营销推广", "primary": "#6366F1", "accent": "#ec4899"},
+      {"id": "nature", "name": "商务绿", "scene": "环保健康", "primary": "#059669", "accent": "#34D399"},
+      {"id": "ocean", "name": "海洋蓝", "scene": "旅行海洋", "primary": "#0077B6", "accent": "#00B4D8"},
+      {"id": "elegant", "name": "商务紫", "scene": "高端定制", "primary": "#7C3AED", "accent": "#A78BFA"},
+      {"id": "royal", "name": "皇家紫", "scene": "高端场合", "primary": "#6D28D9", "accent": "#8B5CF6"},
+      {"id": "festive", "name": "商务红", "scene": "庆典节日", "primary": "#DC2626", "accent": "#F87171"},
+      {"id": "chinese", "name": "中国风", "scene": "传统文化", "primary": "#1a365d", "accent": "#DC2626"}
+    ]
+  },
+  
+  "layouts": {
+    "types": [
+      {"id": "cards_2col", "name": "双栏卡片"},
+      {"id": "title_only", "name": "标题居中"},
+      {"id": "bullet_list", "name": "要点列表"},
+      {"id": "two_column", "name": "双栏文字"},
+      {"id": "image_text", "name": "图文混排"},
+      {"id": "quote", "name": "引言页"},
+      {"id": "timeline", "name": "时间线"},
+      {"id": "comparison", "name": "对比页"},
+      {"id": "process", "name": "流程图"}
+    ]
+  },
+  
+  "decorative_elements": [
+    {"id": "corner_block", "name": "角落装饰块", "templates": ["tech", "business"]},
+    {"id": "side_bar", "name": "侧边装饰条", "templates": ["enterprise", "business"]},
+    {"id": "bottom_line", "name": "底部装饰线", "templates": ["all"]},
+    {"id": "chinese_cloud", "name": "祥云纹", "templates": ["chinese"]},
+    {"id": "ink_brush", "name": "水墨笔触", "templates": ["chinese"]},
+    {"id": "circuit_pattern", "name": "电路图案", "templates": ["tech", "cyber"]},
+    {"id": "glow_effect", "name": "光晕效果", "templates": ["tech"]},
+    {"id": "neon_glow", "name": "霓虹发光", "templates": ["cyber"]}
+  ],
+  
+  "component_styles": {
+    "button": {
+      "primary": {
+        "background": "var(--color-brand)",
+        "color": "white",
+        "border": "none",
+        "padding": "12px 24px",
+        "border_radius": "var(--radius-md)",
+        "font_size": "16px",
+        "transition": "all 0.2s ease"
+      },
+      "secondary": {
+        "background": "white",
+        "color": "var(--color-brand)",
+        "border": "2px solid var(--color-brand)",
+        "padding": "10px 22px",
+        "border_radius": "var(--radius-md)"
+      }
+    },
+    "card": {
+      "background": "white",
+      "border_radius": "var(--radius-lg)",
+      "padding": "var(--space-6)",
+      "box_shadow": "var(--shadow-md)",
+      "transition": "box-shadow 0.2s ease"
+    },
+    "input": {
+      "border": "1px solid var(--color-border)",
+      "border_radius": "var(--radius-md)",
+      "padding": "10px 16px",
+      "font_size": "16px",
+      "focus": {
+        "outline": "none",
+        "border_color": "var(--color-brand)"
+      }
+    }
+  },
+  
+  "p0_fixes": [
+    "替换前端品牌色 #667eea → #2563EB",
+    "统一前后端模板定义（统一为12款）",
+    "修复模板预览占位图"
+  ],
+  
+  "p1_improvements": [
+    "建立CSS变量系统",
+    "补全后端所有模板配置",
+    "新增5+种布局类型",
+    "建立装饰元素库"
+  ],
+  
+  "p2_enhancements": [
+    "输出每款模板设计规范",
+    "建立品牌图形元素",
+    "支持PPT过渡动画"
+  ],
+  
+  "source": "design/设计规范_v2.0.md",
+  "generated_at": "2026-05-04"
+}
